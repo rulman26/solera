@@ -53,11 +53,25 @@ app.get('/servicios', function (req, res) {
   });
 });
 
+//Endpoint que permite filtrar los puestos segun su Tipo(todos,autos,salud,hogar)
+app.get('/servicios/:filtro', function(req, res) {
+  let filtro=req.params.filtro; 
+  let query="";
+  if (filtro!="todos"){
+  	query+="WHERE TIPO='"+filtro+"'";
+  }
+  let sql="SELECT * FROM  puesto "+query;	
+  con.query(sql, function (err, result) {
+    if (err) throw err;    
+    res.send(JSON.stringify(result));
+  });   
+});
+
 //Endpoint que permite Crear un Puesto
 app.post('/crear', function (req, res) { 
 	let dataUser=req.body;   	
-	let sql="INSERT INTO puesto VALUES (default,?,?)";			
-		let data_insert=[dataUser.nombre,dataUser.descripcion];
+	let sql="INSERT INTO puesto VALUES (default,?,?,?,null,null)";			
+		let data_insert=[dataUser.nombre,dataUser.descripcion,dataUser.tipo];
 		  con.query(sql,data_insert,
 		   function (err, result) {			
 			if (err) throw err;    
@@ -83,8 +97,8 @@ app.post('/leer', function (req, res) {
 //Endpoint que permite Editar un Puesto
 app.post('/editar', function (req, res) { 
 	let dataUser=req.body;   	
-	let sql="UPDATE puesto SET NOMBRE=?,DESCRIPCION=? WHERE ID=?";			
-		let data_insert=[dataUser.nombre,dataUser.descripcion,dataUser.id];
+	let sql="UPDATE puesto SET NOMBRE=?,DESCRIPCION=?,TIPO=? WHERE ID=?";			
+		let data_insert=[dataUser.nombre,dataUser.descripcion,dataUser.tipo,dataUser.id];
 		  con.query(sql,data_insert,
 		   function (err, result) {			
 			if (err) throw err;    

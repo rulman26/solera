@@ -12,9 +12,23 @@
 <body>
 
 <div class="container-fluid">
-  <h1>Servicios</h1>
+  <center><h1>Servicios</h1></center>
   <div class="modal" id="modal_formulario">
-  </div>   
+  </div>  
+  <ul class="nav nav-pills">
+    <li class="nav-item">
+      <a class="nav-link" href="#" onclick="getDataServices('todos')">Todos</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" onclick="getDataServices('autos')">Autos</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" onclick="getDataServices('salud')">Salud</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" onclick="getDataServices('hogar')">Hogar</a>
+    </li>
+  </ul> 
   <div class="row">    
     <div class="col-sm-9" id="servicios"></div>
     <div class="col-sm-3" style="background-color:lavenderblush;">
@@ -27,6 +41,14 @@
 		    <label for="descripcion">Descripcion *</label>
 		    <input type="text" class="form-control" id="descripcion" name="descripcion">
 		  </div>
+      <div class="form-group">
+        <label for="tipo">Tipo *</label>        
+        <select class="form-control" id="tipo" name="tipo">          
+          <option value="autos">Autos</option>
+          <option value="salud">Salud</option>
+          <option value="hogar">Hogar</option>
+        </select>
+      </div>
 		  <button type="submit" class="btn btn-primary">Grabar</button>
 		</form>
 	</div>
@@ -38,25 +60,27 @@
 
 <script type="text/javascript">
 var url='http://localhost:3000/';
-function getDataServices(){
-	$.get(url+"servicios",function(data){          
+function getDataServices(filtro){
+	$.get(url+"servicios/"+filtro,function(data){          
 	    let response=JSON.parse(data);	    
 	    let divs='<div class="row">';
 	    for(x in response){
 	    	divs+='<div class="col-sm-4">';
-	    	divs+='<h2>'+response[x].NOMBRE+'</h2>';
-	    	divs+='<p>'+response[x].DESCRIPCION+'</p>';
-	    	divs+='<div class="btn-group">';
-			divs+='<button type="button" onclick="Editar('+response[x].ID+')" class="btn btn-primary">Editar</button>';
-			divs+='<button type="button" onclick="Eliminar('+response[x].ID+')" class="btn btn-primary">Eliminar</button>';		
-			divs+='</div>'
+        divs+='<div class="card">'; 
+        divs+='<div class="card-body">';  
+        divs+='<h4 class="card-title">'+response[x].NOMBRE+'</h4>';         	    	
+        divs+='<p class="card-text">'+response[x].DESCRIPCION+'</p>';        
+        divs+='<a href="#" class="card-link" onclick="Editar('+response[x].ID+')">Editar </a>';        
+        divs+='<a href="#" class="card-link" onclick="Eliminar('+response[x].ID+')">Eliminar </a>';        	    	
+			  divs+='</div>';
+        divs+='</div>';
 	    	divs+='</div>';
 	    }
 	    divs+='</div>';
 	    document.getElementById("servicios").innerHTML=divs;
 		});
 }
-getDataServices();	
+getDataServices("todos");	
 
 $(document).ready(function() {
   $('form').on('submit', function(e){
@@ -70,6 +94,7 @@ function servicioCrear()
 
   let nombre=document.getElementById("nombre").value;
   let descripcion=document.getElementById("descripcion").value;
+  let tipo=document.getElementById("tipo").value;
   if (nombre=="" || descripcion=="") {
     alert("INGRESE DATOS DE NOMBRE Y DESCRIPCION");
   }
@@ -77,13 +102,14 @@ function servicioCrear()
     let data={}
     data['nombre']=nombre;
     data['descripcion']=descripcion;    
+    data['tipo']=tipo;    
     let ruta=url+'crear';
     $.post(ruta,data, function(data_server) {                    
       let response=JSON.parse(data_server);                          
       if (response['estado']){  
       	document.getElementById("nombre").value="";
       	document.getElementById("descripcion").value="";
-        getDataServices();
+        getDataServices("todos"); 
       }else{
         alert(response['mensaje']);
       }  
@@ -124,7 +150,14 @@ function modalPuestoEditar(nombre,descripcion,id){
         <input required type="text" class="form-control" id="m_descripcion" 
           name="m_descripcion" value="`+descripcion+`">
       </div>
-    
+      <div class="form-group">
+        <label for="m_tipo">Tipo *</label>        
+        <select class="form-control" id="m_tipo" name="m_tipo">          
+          <option value="autos">Autos</option>
+          <option value="salud">Salud</option>
+          <option value="hogar">Hogar</option>
+        </select>
+      </div>    
     </form>
   </div>
   <div class="modal-footer"> 
@@ -138,24 +171,26 @@ function modalPuestoEditar(nombre,descripcion,id){
 
 function usuarioPuestoGuardar(){   
 	let id=document.getElementById("m_id").value;
-  	let nombre=document.getElementById("m_nombre").value;
+  let nombre=document.getElementById("m_nombre").value;
 	let descripcion=document.getElementById("m_descripcion").value;
+  let tipo=document.getElementById("m_tipo").value;
 	if (nombre=="" || descripcion=="") {
 	    alert("INGRESE DATOS DE NOMBRE Y DESCRIPCION");
 	}else{
 		let data_json={}
 		data_json['id']=id;
-	    data_json['nombre']=nombre;
-	    data_json['descripcion']=descripcion;   
-	    $.post(url+"editar",data_json,function(data){      
-		  let response=JSON.parse(data);      	  
-		  if (response.estado){
-		    $('#modal_formulario').html("");
-		    $('#modal_formulario').modal('toggle');      
-		  	getDataServices();
-		  }else{        
-		      alert("Huvo un Error");  
-		  }
+    data_json['nombre']=nombre;
+    data_json['descripcion']=descripcion;   
+    data_json['tipo']=tipo;   
+    $.post(url+"editar",data_json,function(data){      
+  	  let response=JSON.parse(data);      	  
+  	  if (response.estado){
+  	    $('#modal_formulario').html("");
+  	    $('#modal_formulario').modal('toggle');      
+  	  	getDataServices("todos");  
+  	  }else{        
+  	      alert("Huvo un Error");  
+  	  }
 		});
 	}
 }
@@ -196,7 +231,7 @@ function usuarioPuestoEliminar(id){
 	  if (response.estado){
 	    $('#modal_formulario').html("");
 	    $('#modal_formulario').modal('toggle');      
-	  	getDataServices();
+	  	getDataServices("todos"); 
 	  }else{        
 	      alert("Huvo un Error");  
 	  }
@@ -205,3 +240,4 @@ function usuarioPuestoEliminar(id){
 }
 
 </script>
+
