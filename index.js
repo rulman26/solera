@@ -123,3 +123,44 @@ app.post('/eliminar', function (req, res) {
 	    	res.send(JSON.stringify(mensaje));
 	});
 });
+
+//Funcion que calcula la distancia entre dos pustos
+distanciaKilometros = function(lat1,lon1,lat2,lon2)
+ {
+	rad = function(x) {return x*Math.PI/180;}
+	var R = 6378.137; //Radio de la tierra en km
+	var dLat = rad( lat2 - lat1 );
+	var dLong = rad( lon2 - lon1 );
+	var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLong/2) * Math.sin(dLong/2);
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+	var d = R * c;
+	return d.toFixed(3); //Retorna tres decimales
+ }
+
+//Caldutar Distancia de dos Puestos Seguno su Nombre
+/*
+	http://localhost:3000/distancia/Auto1/Auto2
+*/
+app.get('/distancia/:origen/:destino', function (req, res) { 
+	let p1=req.params.origen; 
+	let p2=req.params.destino; 	 	
+	let sql="SELECT ID,NOMBRE,LATITUD,LONGITUD FROM puesto WHERE NOMBRE IN (?,?)";
+		let data=[p1,p2];
+		  con.query(sql,data,
+		   function (err, result) {	
+			if (err) throw err;
+			let filas=result.length;
+			var mensaje={};  
+			if (filas==2){
+				let distancia=distanciaKilometros(result[0].LATITUD,result[0].LONGITUD,result[1].LATITUD,result[1].LONGITUD);
+				mensaje['estado']=true;				
+				mensaje['origen']=result[0].NOMBRE;
+				mensaje['destino']=result[1].NOMBRE;
+				mensaje['distancia']=distancia;	
+			}else{
+				mensaje['estado']=false;				
+				mensaje['origen']="Error No Existe Datos.";
+			}
+			res.send(JSON.stringify(mensaje));
+	});
+});
