@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Solera</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container-fluid">
+  <h1>Servicios</h1>
+  <div class="modal" id="modal_formulario">
+  </div>   
+  <div class="row">    
+    <div class="col-sm-9" id="servicios"></div>
+    <div class="col-sm-3" style="background-color:lavenderblush;">
+    	<form id="form_crear">
+		  <div class="form-group">
+		    <label for="nombre">Nombre *</label>
+		    <input type="text" class="form-control" id="nombre" id="name">
+		  </div>
+		  <div class="form-group">
+		    <label for="descripcion">Descripcion *</label>
+		    <input type="text" class="form-control" id="descripcion" name="descripcion">
+		  </div>
+		  <button type="submit" class="btn btn-primary">Grabar</button>
+		</form>
+	</div>
+  </div>
+</div>
+
+</body>
+</html>
+
+<script type="text/javascript">
+var url='http://localhost:3000/';
+function getDataServices(){
+	$.get(url+"servicios",function(data){          
+	    let response=JSON.parse(data);	    
+	    let divs='<div class="row">';
+	    for(x in response){
+	    	divs+='<div class="col-sm-4">';
+	    	divs+='<h2>'+response[x].NOMBRE+'</h2>';
+	    	divs+='<p>'+response[x].DESCRIPCION+'</p>';
+	    	divs+='<div class="btn-group">';
+			divs+='<button type="button" onclick="Editar('+response[x].ID+')" class="btn btn-primary">Editar</button>';
+			divs+='<button type="button" onclick="Eliminar('+response[x].ID+')" class="btn btn-primary">Eliminar</button>';		
+			divs+='</div>'
+	    	divs+='</div>';
+	    }
+	    divs+='</div>';
+	    document.getElementById("servicios").innerHTML=divs;
+		});
+}
+getDataServices();	
+
+$(document).ready(function() {
+  $('form').on('submit', function(e){
+      e.preventDefault();
+      servicioCrear();
+  });
+});
+
+function servicioCrear()
+{
+
+  let nombre=document.getElementById("nombre").value;
+  let descripcion=document.getElementById("descripcion").value;
+  if (nombre=="" || descripcion=="") {
+    alert("INGRESE DATOS DE NOMBRE Y DESCRIPCION");
+  }
+  else{  
+    let data={}
+    data['nombre']=nombre;
+    data['descripcion']=descripcion;    
+    let ruta=url+'crear';
+    $.post(ruta,data, function(data_server) {                    
+      let response=JSON.parse(data_server);                          
+      if (response['estado']){  
+      	document.getElementById("nombre").value="";
+      	document.getElementById("descripcion").value="";
+        getDataServices();
+      }else{
+        alert(response['mensaje']);
+      }  
+    });
+  }
+}
+
+function Editar(id){
+	let data_json={};
+	data_json['id']=id
+	$.post(url+"leer",data_json,function(data){ 		
+		let response=JSON.parse(data);
+		let modal=modalPuestoEditar(response[0].NOMBRE,response[0].DESCRIPCION,response[0].ID);  
+		$('#modal_formulario').html(modal);
+  		$('#modal_formulario').modal('toggle');
+	});	     
+	
+}
+
+function modalPuestoEditar(nombre,descripcion,id){  
+  
+  let modal=`<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+  <div class="modal-header">
+    <h4 class="modal-title">Editar Puesto</h4>
+    <button type="button" class="close" data-dismiss="modal">&times;</button>
+  </div>
+  <div class="modal-body">
+    <form id="form_puesto_editar">
+      <input type="hidden" id="m_id" name="m_id" value="`+id+`">
+      <div class="form-group">
+        <label for="m_nombre">Nombre *</label>
+        <input required type="text" class="form-control" id="m_nombre" 
+          name="m_nombre" value="`+nombre+`">
+      </div>
+      <div class="form-group">
+        <label for="m_descripcion">Descripcion *</label>
+        <input required type="text" class="form-control" id="m_descripcion" 
+          name="m_descripcion" value="`+descripcion+`">
+      </div>
+    
+    </form>
+  </div>
+  <div class="modal-footer"> 
+    <button type="button" class="btn btn-success" onclick="usuarioPuestoGuardar()">Editar</button>       
+    <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>        
+  </div>
+  </div>
+  </div>`;
+  return modal;
+}
+
+function usuarioPuestoGuardar(){   
+	let id=document.getElementById("m_id").value;
+  	let nombre=document.getElementById("m_nombre").value;
+	let descripcion=document.getElementById("m_descripcion").value;
+	if (nombre=="" || descripcion=="") {
+	    alert("INGRESE DATOS DE NOMBRE Y DESCRIPCION");
+	}else{
+		let data_json={}
+		data_json['id']=id;
+	    data_json['nombre']=nombre;
+	    data_json['descripcion']=descripcion;   
+	    $.post(url+"editar",data_json,function(data){      
+		  let response=JSON.parse(data);      	  
+		  if (response.estado){
+		    $('#modal_formulario').html("");
+		    $('#modal_formulario').modal('toggle');      
+		  	getDataServices();
+		  }else{        
+		      alert("Huvo un Error");  
+		  }
+		});
+	}
+}
+
+function Eliminar(id){
+	let modal=modalPuestoEliminar(id);  
+	$('#modal_formulario').html(modal);
+	$('#modal_formulario').modal('toggle');	
+}
+
+function modalPuestoEliminar(id){  
+  
+  let modal=`<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+  <div class="modal-header">
+    <h4 class="modal-title">Eliminar Puesto</h4>
+    <button type="button" class="close" data-dismiss="modal">&times;</button>
+  </div>
+  <div class="modal-body">
+    <form >      
+      <p>Estas Seguro de Eliminar el Puesto..?</p>
+    </form>
+  </div>
+  <div class="modal-footer"> 
+    <button type="button" class="btn btn-success" onclick="usuarioPuestoEliminar(`+id+`)">SI</button>       
+    <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>        
+  </div>
+  </div>
+  </div>`;
+  return modal;
+}
+
+function usuarioPuestoEliminar(id){  
+	let data_json={} 
+    data_json['id']=id;    
+    $.post(url+"eliminar",data_json,function(data){      
+	  let response=JSON.parse(data);      	  
+	  if (response.estado){
+	    $('#modal_formulario').html("");
+	    $('#modal_formulario').modal('toggle');      
+	  	getDataServices();
+	  }else{        
+	      alert("Huvo un Error");  
+	  }
+	});
+	
+}
+
+</script>

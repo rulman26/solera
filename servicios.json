@@ -1,0 +1,31 @@
+{
+    "servicios":[{
+            "nombre":"rojo",
+            "descripcion":"#f00"
+        },
+        {
+            "nombre":"verde",
+            "descripcion":"#0f0"
+        },
+        {
+            "nombre":"azul",
+            "descripcion":"#00f"
+        },
+        {
+            "nombre":"cyan",
+            "descripcion":"#0ff"
+        },
+        {
+            "nombre":"magenta",
+            "descripcion":"#f0f"
+        },
+        {
+            "nombre":"amarillo",
+            "descripcion":"#ff0"
+        },
+        {
+            "nombre":"negro",
+            "descripcion":"#000"
+        }
+    ]
+}
